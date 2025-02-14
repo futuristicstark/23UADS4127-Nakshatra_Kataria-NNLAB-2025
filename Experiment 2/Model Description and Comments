@@ -1,16 +1,26 @@
- Explanation:
+Model Description
+•	A Multi-Layer Perceptron (MLP) consists of an input layer, one or more hidden layers, and an output layer.
+•	Unlike a single-layer perceptron, an MLP can solve non-linearly separable problems like XOR.
+•	The model uses:
+o	Sigmoid activation function for non-linearity.
+o	Forward propagation to compute outputs.
+o	Backpropagation to update weights using gradient descent.
 
-Logic Behind the SimpleNeuron:
-This code implements a simple neuron model, also known as a perceptron, to understand the behavior of NAND and XOR gates. The neuron uses a step activation function to predict the output based on weighted inputs.
 
-NAND Gate:
-- Linearly Separable: The model successfully learns the NAND gate as the data points can be separated by a straight line.
-- Prediction: The neuron adjusts its weights through learning until it accurately predicts the NAND logic.
 
-XOR Gate:
-- Non-Linearly Separable: A single neuron cannot learn the XOR pattern because the data points cannot be separated with a single straight line.
-- Limitation: XOR requires multiple layers or a more advanced architecture to solve.
+Explanation:
+
+Neural Network for XOR Function:
+This program implements a neural network with one hidden layer to learn the XOR Boolean function.
 
 Key Insights:
-- Perceptrons excel with linearly separable problems.
-- Complex, non-linear problems like XOR need multi-layer models.
+- XOR is a non-linear problem that a single-layer perceptron cannot solve.
+- By adding a hidden layer with activation functions, the network can learn the XOR pattern.
+
+Training Process:
+- Forward pass: Calculates predictions.
+- Backward pass: Updates weights based on prediction errors.
+
+Parameter Tuning:
+- The learning rate (lr) and the number of hidden units can be adjusted for better performance.
+- Loss decreases over epochs as the network learns the correct XOR mappings.
