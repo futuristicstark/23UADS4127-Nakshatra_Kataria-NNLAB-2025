@@ -1,1 +1,24 @@
+Model Description
+- A perceptron is a single-layer artificial neuron that classifies data based on a linear decision boundary.
+- The model consists of weights and a bias, updated using the perceptron learning rule.
+- The activation function used is the step function (returns 1 for positive values, 0 otherwise).
+- The perceptron can successfully classify linearly separable functions like NAND but fails for XOR due to non-linearity.
 
+
+
+Explanation:
+
+Logic Behind the SimpleNeuron:
+This code implements a simple neuron model, also known as a perceptron, to understand the behavior of NAND and XOR gates. The neuron uses a step activation function to predict the output based on weighted inputs.
+
+NAND Gate:
+- Linearly Separable: The model successfully learns the NAND gate as the data points can be separated by a straight line.
+- Prediction: The neuron adjusts its weights through learning until it accurately predicts the NAND logic.
+
+XOR Gate:
+- Non-Linearly Separable: A single neuron cannot learn the XOR pattern because the data points cannot be separated with a single straight line.
+- Limitation: XOR requires multiple layers or a more advanced architecture to solve.
+
+Key Insights:
+- Perceptrons excel with linearly separable problems.
+- Complex, non-linear problems like XOR need multi-layer models.
