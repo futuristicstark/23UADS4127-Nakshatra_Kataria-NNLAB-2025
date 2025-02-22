@@ -53,7 +53,7 @@ The model achieves 100% accuracy (4/4 correct predictions) for XOR inputs.
 | 0         | 2          | 0          |
 | 1         | 0          | 2          |
 
-![Loss Curve](Experiment_2/conf.png)
+![Confusion Matrix](23UADS4127-Nakshatra_Kataria-NNLAB-2025/Experiment%202/conf.png)
 
 All values are correctly classified.
 
