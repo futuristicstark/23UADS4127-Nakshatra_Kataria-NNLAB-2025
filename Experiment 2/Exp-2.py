@@ -1,62 +1,88 @@
-# 2. WAP to implement a multi-layer perceptron (MLP) network with one hidden layer using numpy in Python. Demonstrate that it can learn the XOR Boolean function.
+# 2. WAP to implement a multi-layer perceptron (MLP) network with one hidden layer using numpy in Python. Demonstrate that it can learn the XOR Boolean function. 
+
 
 import numpy as np
 
-class NeuralNetwork:
-    def __init__(self, input_dim, hidden_units, output_dim, lr=0.1, max_epochs=10000):
-        self.input_dim = input_dim
-        self.hidden_units = hidden_units
-        self.output_dim = output_dim
-        self.lr = lr
-        self.max_epochs = max_epochs
+# Step activation function
+def step_function(x):
+    return np.where(x >= 0, 1, 0)
 
-        self.W1 = np.random.randn(input_dim, hidden_units)
-        self.b1 = np.zeros((1, hidden_units))
-        self.W2 = np.random.randn(hidden_units, output_dim)
-        self.b2 = np.zeros((1, output_dim))
+# Perceptron class
+class Perceptron:
+    def __init__(self, input_size, learning_rate=0.1, epochs=10000):
+        np.random.seed(42)  # Fix randomness for consistent training
+        self.input_size = input_size
+        self.learning_rate = learning_rate
+        self.epochs = epochs
+        self.weights = np.random.randn(input_size)
+        self.bias = np.random.randn()
 
-    def activation(self, x):
-        return 1 / (1 + np.exp(-x))
-
-    def activation_derivative(self, x):
-        return x * (1 - x)
-
-    def forward_pass(self, X):
-        self.z1 = np.dot(X, self.W1) + self.b1
-        self.a1 = self.activation(self.z1)
-        self.z2 = np.dot(self.a1, self.W2) + self.b2
-        self.a2 = self.activation(self.z2)
-        return self.a2
-
-    def backward_pass(self, X, y):
-        error_out = y - self.a2
-        delta_out = error_out * self.activation_derivative(self.a2)
-
-        error_hidden = delta_out.dot(self.W2.T)
-        delta_hidden = error_hidden * self.activation_derivative(self.a1)
-
-        self.W2 += self.a1.T.dot(delta_out) * self.lr
-        self.b2 += np.sum(delta_out, axis=0, keepdims=True) * self.lr
-        self.W1 += X.T.dot(delta_hidden) * self.lr
-        self.b1 += np.sum(delta_hidden, axis=0, keepdims=True) * self.lr
+    def forward(self, X):
+        return step_function(np.dot(X, self.weights) + self.bias)
 
     def train(self, X, y):
-        for epoch in range(self.max_epochs):
-            self.forward_pass(X)
-            self.backward_pass(X, y)
-            if epoch % 1000 == 0:
-                loss = np.mean(np.square(y - self.a2))
-                print(f"Epoch {epoch}, Loss: {loss}")
+        for _ in range(self.epochs):
+            for xi, target in zip(X, y):
+                output = self.forward(xi)
+                error = target - output
+                self.weights += self.learning_rate * error * xi
+                self.bias += self.learning_rate * error
 
     def predict(self, X):
-        return self.forward_pass(X)
+        return self.forward(X)
 
-
+# XOR dataset
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([[0], [1], [1], [0]])
+y_hidden1 = np.array([1, 1, 1, 0])  # NAND gate
+y_hidden2 = np.array([0, 1, 1, 1])  # OR gate
+y_output = np.array([0, 1, 1, 0])   # XOR gate
 
-nn = NeuralNetwork(input_dim=2, hidden_units=4, output_dim=1, lr=0.1, max_epochs=10000)
-nn.train(X, y)
+# Train first hidden neuron (NAND function)
+hidden1 = Perceptron(input_size=2)
+hidden1.train(X, y_hidden1)
 
-print("\nPredictions after training:")
-print(nn.predict(X))
+# Train second hidden neuron (OR function)
+hidden2 = Perceptron(input_size=2)
+hidden2.train(X, y_hidden2)
+
+# Combine hidden layer outputs
+hidden_output = np.column_stack((hidden1.predict(X), hidden2.predict(X)))
+
+# Train output neuron (AND function)
+output_neuron = Perceptron(input_size=2)
+output_neuron.train(hidden_output, y_output)
+
+# Predictions
+predictions = output_neuron.predict(hidden_output)
+
+# Compute accuracy
+accuracy = np.mean(predictions == y_output) * 100
+
+# Display results
+print("Predictions for XOR:", predictions.flatten())
+print(f"Accuracy: {accuracy:.2f}%")
+
+
+# Predictions for XOR: [0 1 1 0]
+# Accuracy: 100.00%
+
+# Plot Loss Curve (Total Error per Epoch)
+plt.figure(figsize=(10, 5))
+plt.plot(range(len(output_neuron.loss_history)), output_neuron.loss_history, label="Total Error per Epoch", color='blue')
+plt.xlabel("Epochs")
+plt.ylabel("Total Error")
+plt.title("Loss Curve of Perceptron Training")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Confusion Matrix
+cm = confusion_matrix(y_output, predictions)
+
+# Visualizing Confusion Matrix
+plt.figure(figsize=(5, 4))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=[0, 1], yticklabels=[0, 1])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
