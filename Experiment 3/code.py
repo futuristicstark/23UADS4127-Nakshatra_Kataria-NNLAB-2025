@@ -61,3 +61,28 @@ accuracy = np.mean(predictions == y_output) * 100
 # Display results
 print("Predictions for XOR:", predictions.flatten())
 print(f"Accuracy: {accuracy:.2f}%")
+
+
+# Predictions for XOR: [0 1 1 0]
+# Accuracy: 100.00%
+
+# Plot Loss Curve (Total Error per Epoch)
+plt.figure(figsize=(10, 5))
+plt.plot(range(len(output_neuron.loss_history)), output_neuron.loss_history, label="Total Error per Epoch", color='blue')
+plt.xlabel("Epochs")
+plt.ylabel("Total Error")
+plt.title("Loss Curve of Perceptron Training")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Confusion Matrix
+cm = confusion_matrix(y_output, predictions)
+
+# Visualizing Confusion Matrix
+plt.figure(figsize=(5, 4))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=[0, 1], yticklabels=[0, 1])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
