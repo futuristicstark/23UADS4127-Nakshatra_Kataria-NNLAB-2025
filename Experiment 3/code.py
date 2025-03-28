@@ -1,55 +1,116 @@
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Load MNIST dataset
-(x_train_set, y_train_set), (x_test_set, y_test_set) = tf.keras.datasets.mnist.load_data()
-x_train_set = x_train_set.reshape(-1, 784).astype("float32") / 255.0
-x_test_set = x_test_set.reshape(-1, 784).astype("float32") / 255.0
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
-# Define placeholders
-input_data = tf.placeholder(tf.float32, [None, 784])
-target_output = tf.placeholder(tf.float32, [None, 10])
+# Preprocess dataset
+x_train, x_test = x_train.reshape(-1, 28*28).astype(np.float32) / 255.0, x_test.reshape(-1, 28*28).astype(np.float32) / 255.0
+y_train, y_test = tf.one_hot(y_train, depth=10), tf.one_hot(y_test, depth=10)
 
-# Neural network architecture
-layer1_size = 256
-weights_1 = tf.Variable(tf.random.normal([784, layer1_size]))
-bias_1 = tf.Variable(tf.zeros([layer1_size]))
+# Network parameters
+input_size = 784
+hidden_size1 = 128
+hidden_size2 = 64
+output_size = 10
+learning_rate = 0.001
+epochs = 30
+batch_size = 128
 
-weights_2 = tf.Variable(tf.random.normal([layer1_size, 10]))
-bias_2 = tf.Variable(tf.zeros([10]))
+# Initialize weights and biases using He initialization
+initializer = tf.keras.initializers.HeNormal()
+weights = {
+    "W1": tf.Variable(initializer([input_size, hidden_size1])),
+    "W2": tf.Variable(initializer([hidden_size1, hidden_size2])),
+    "W3": tf.Variable(initializer([hidden_size2, output_size])),
+}
+biases = {
+    "b1": tf.Variable(tf.zeros([hidden_size1])),
+    "b2": tf.Variable(tf.zeros([hidden_size2])),
+    "b3": tf.Variable(tf.zeros([output_size])),
+}
 
-# Forward pass
-layer1_output = tf.nn.relu(tf.matmul(input_data, weights_1) + bias_1)
-final_output = tf.matmul(layer1_output, weights_2) + bias_2
-predicted_output = tf.nn.softmax(final_output)
+# Dropout rate
+dropout_rate = 0.3
 
-# Loss and optimizer
-loss_function = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=target_output, logits=final_output))
-train_step = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss_function)
+# Define feed-forward function
+def forward_propagation(x, training=True):
+    z1 = tf.matmul(x, weights["W1"]) + biases["b1"]
+    a1 = tf.nn.relu(z1)
+    a1 = tf.nn.dropout(a1, rate=dropout_rate) if training else a1
+    
+    z2 = tf.matmul(a1, weights["W2"]) + biases["b2"]
+    a2 = tf.nn.relu(z2)
+    a2 = tf.nn.dropout(a2, rate=dropout_rate) if training else a2
+    
+    z3 = tf.matmul(a2, weights["W3"]) + biases["b3"]
+    return z3  # Keep as logits
 
-# Accuracy calculation
-correct_predictions = tf.equal(tf.argmax(predicted_output, 1), tf.argmax(target_output, 1))
-accuracy_metric = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+# Loss function (cross-entropy)
+def compute_loss(y_pred, y_true):
+    return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y_true))
 
-# Training
-num_epochs = 10
-batch_size = 100
+# Training function with backpropagation
+def train_step(x_batch, y_batch):
+    with tf.GradientTape() as tape:
+        logits = forward_propagation(x_batch)
+        loss = compute_loss(logits, y_batch)
+    
+    gradients = tape.gradient(loss, list(weights.values()) + list(biases.values()))
+    
+    for i, key in enumerate(weights.keys()):
+        weights[key].assign_sub(learning_rate * gradients[i])
+    for i, key in enumerate(biases.keys()):
+        biases[key].assign_sub(learning_rate * gradients[len(weights) + i])
+    
+    return loss
 
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
+# Store loss for plotting
+loss_history = []
 
-    for epoch in range(num_epochs):
-        for i in range(0, len(x_train_set), batch_size):
-            batch_input = x_train_set[i:i + batch_size]
-            batch_target = y_train_set[i:i + batch_size]
-            batch_target = np.eye(10)[batch_target]
+# Training loop
+num_batches = x_train.shape[0] // batch_size
+for epoch in range(epochs):
+    avg_loss = 0
+    for i in range(num_batches):
+        batch_x = x_train[i * batch_size:(i + 1) * batch_size]
+        batch_y = y_train[i * batch_size:(i + 1) * batch_size]
+        loss = train_step(batch_x, batch_y)
+        avg_loss += loss / num_batches
+    
+    loss_history.append(avg_loss.numpy())
+    print(f"Epoch {epoch+1}, Loss: {avg_loss.numpy():.4f}")
 
-            sess.run(train_step, feed_dict={input_data: batch_input, target_output: batch_target})
+# Plot the loss curve
+plt.figure(figsize=(8, 5))
+plt.plot(loss_history, label='Training Loss', color='blue')
+plt.title('Loss Curve')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+plt.show()
 
-        # Evaluate accuracy after each epoch
-        train_accuracy = sess.run(accuracy_metric, feed_dict={input_data: x_train_set, target_output: np.eye(10)[y_train_set]})
-        print(f"Epoch: {epoch + 1}, Training Accuracy: {train_accuracy:.4f}")
+# Evaluation
+logits_test = forward_propagation(x_test, training=False)
+y_pred_test = tf.nn.softmax(logits_test)
 
-    # Test accuracy
-    test_accuracy = sess.run(accuracy_metric, feed_dict={input_data: x_test_set, target_output: np.eye(10)[y_test_set]})
-    print(f"Test Accuracy: {test_accuracy:.4f}")
+correct_predictions = tf.equal(tf.argmax(y_pred_test, axis=1), tf.argmax(y_test, axis=1))
+accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+
+print(f"Test Accuracy: {accuracy.numpy() * 100:.2f}%")
+
+# Confusion Matrix
+y_true_labels = tf.argmax(y_test, axis=1).numpy()
+y_pred_labels = tf.argmax(y_pred_test, axis=1).numpy()
+
+confusion_matrix = tf.math.confusion_matrix(labels=y_true_labels, predictions=y_pred_labels, num_classes=10)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=range(10), yticklabels=range(10))
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.show()
