@@ -2,39 +2,68 @@
 # Experiment Report: Neural Network for Handwritten Digit Classification
 
 ## **Objective**
-The goal of this experiment is to build a neural network model using TensorFlow to classify handwritten digits from the MNIST dataset. The aim is to train a model that can accurately predict which digit (0-9) is represented in a given image.
+WAP to implement a three-layer neural network using Tensor flow library (only, no keras) to classify MNIST handwritten digits dataset. Demonstrate the implementation of feed-forward and back-propagation approaches. 
 
 ---
 
-## **Description of the Model**
-The model is a simple feedforward neural network (fully connected) with the following structure:
-- **Input Layer**: 784 neurons (28x28 pixel images flattened)
-- **Hidden Layer 1**: 256 neurons with ReLU activation
-- **Hidden Layer 2**: 128 neurons with ReLU activation
-- **Hidden Layer 3**: 64 neurons with ReLU activation
-- **Output Layer**: 10 neurons (for digits 0-9) with softmax activation
+## **Description of the Code **
+This code implements a neural network from scratch using TensorFlow for the MNIST digit classification task. The MNIST dataset contains grayscale images of handwritten digits (0–9) of size 28x28 pixels. The goal is to classify each image into one of the 10 digits.
 
 ---
 
 
 ## **Description of the Code**
 1. **Data Preparation**:
-   - The MNIST dataset is loaded and reshaped into a flat array (28 x 28 = 784).
-   - Pixel values are normalized between 0 and 1.
+   Loading Dataset:
+
+   - The code loads the MNIST dataset using tf.keras.datasets.mnist.load_data() which returns training and test data.
+
+   Reshaping and Normalizing:
+   
+   - The images are reshaped from (28, 28) to a flattened vector of size 784.
+   - Pixel values are normalized to the range [0, 1] for better training performance.
+   
+   One-Hot Encoding:
+   
+   - The labels (digits) are converted to one-hot vectors using tf.one_hot() to make them compatible with the softmax output layer.
 
 2. **Model Building**:
-   - A `Sequential` model is used to define the network architecture.
-   - Three hidden layers are used with ReLU activation for non-linearity.
-   - The output layer uses softmax activation to generate probabilities for 10 possible classes (digits 0-9).
+   - Network Architecture:
+
+     - Input layer → 784 nodes (28x28 pixels).
+         
+     - Hidden layer 1 → 128 nodes, ReLU activation.
+         
+     - Hidden layer 2 → 64 nodes, ReLU activation.
+         
+     - Output layer → 10 nodes (for digits 0–9), raw logits used for classification
+
+  - Weights Initialization:
+
+      - Weights are initalized using He Normal Initialization (tf.keras.initializers.HeNormal) for better gradient flow with ReLU activation.
 
 3. **Compilation and Training**:
    - Adam optimizer and sparse categorical cross-entropy loss are used.
    - The model is trained for 10 epochs with validation.
 
 4. **Evaluation**:
-   - The model is evaluated on the test set for accuracy.
-   - Accuracy and loss curves are plotted for visualization.
+   - Predictions:
 
+      - Model generates logits from test data.
+      
+      - Predicted class = argmax(logits).
+
+    - Accuracy Calculation:
+
+      - Compares predicted classes with true labels.
+      
+      - Accuracy = Mean of correctly predicted samples.
+
+    - Confusion Matrix:
+
+        - A confusion matrix is plotted using seaborn to visualize classification performance.
+         
+        - Provides insights into misclassified digits and model behavior.
 ---
 
 ## **Performance Evaluation**
@@ -51,11 +80,13 @@ The model is a simple feedforward neural network (fully connected) with the foll
 
 ## **My Comments**
 ### ➡️ **Limitations**
-- The model is simple and may struggle with more complex image datasets.
-- Could explore adding dropout layers to reduce overfitting.
+- The model has only two hidden layers with 128 and 64 neurons, which may not be sufficient to capture complex patterns in the data.
+- More complex architectures (like CNNs) are typically more effective for image data.
+- The model continues training even if the loss stops decreasing, leading to wasted compute time and possible overfitting.
 
 ### ➡️ **Scope of Improvement**
-- Try using convolutional layers (CNN) to improve spatial pattern recognition.
+- Use Convolutional Neural Networks (CNNs)
 - Experiment with different optimizers or learning rates for better convergence.
-- Introduce data augmentation to improve generalization.
+- Add Early Stopping
+- Adding more neurons or hidden layers may allow the model to learn more complex patterns.
 
